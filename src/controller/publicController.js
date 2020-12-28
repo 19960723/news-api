@@ -1,6 +1,7 @@
 import svgCaptcha from 'svg-captcha'
 import { setValue } from '../db/RedisDB'
 
+// 获取图片验证码
 export const getCaptcha = (ctx) => {
   const body = ctx.request.query
   const newCaptca = svgCaptcha.create({
