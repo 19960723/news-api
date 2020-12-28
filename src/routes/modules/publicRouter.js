@@ -1,9 +1,9 @@
 import Router from 'koa-router'
-import { resTest, getCaptcha, test } from '../controller/publicController'
+import { getCaptcha, test } from '@/controller/publicController'
 
 const router = new Router()
 router.prefix('/public')
-router.get('/resTest', resTest)
+// 获取图形验证码
 router.get('/getCaptcha', getCaptcha)
 router.get('/test', test)
 

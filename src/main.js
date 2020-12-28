@@ -12,7 +12,6 @@ import compose from 'koa-compose'
 import compress from 'koa-compress'
 import { JWT_SECRET } from './config'
 import errorHandle from './common/ErrorHandle'
-
 const app = new Koa()
 const isDevMode = !(process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'prod')
 // 定义公共路径，不需要jwt鉴权

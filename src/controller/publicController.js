@@ -1,13 +1,6 @@
 import svgCaptcha from 'svg-captcha'
 import { setValue } from '../db/RedisDB'
 
-export const resTest = async(ctx, next) => {
-  ctx.body = {
-    message: 'hello world',
-    code: 200
-  }
-}
-
 export const getCaptcha = (ctx) => {
   const body = ctx.request.query
   const newCaptca = svgCaptcha.create({

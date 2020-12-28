@@ -1,4 +1,6 @@
 import { getValue } from '../db/RedisDB'
+import { JWT_SECRET } from '../config'
+import jwt from 'jsonwebtoken'
 
 /**
  * 验证 图形验证码
@@ -13,5 +15,9 @@ export const checkCode = async(key, value) => {
   } else {
     return false
   }
+}
+
+export const getJWTPlayload = token => {
+  return jwt.verify(token.split(' ')[1], JWT_SECRET)
 }
 

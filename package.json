@@ -4,10 +4,12 @@
   "main": "main.js",
   "license": "MIT",
   "scripts": {
-    "start": "cross-env NODE_ENV=development nodemon --exec babel-node --inspect ./src/main.js",
+    "start2": "cross-env NODE_ENV=development nodemon --exec babel-node --inspect ./src/main.js",
     "dev": "cross-env NODE_ENV=development webpack --config config/webpack.config.dev.js",
     "build": "cross-env NODE_ENV=production webpack --config config/webpack.config.prod.js",
-    "watch": "cross-env NODE_ENV=development webpack --watch --progress --hide-modules --config config/webpack.config.dev.js"
+    "watch": "cross-env NODE_ENV=development webpack --watch --progress --config config/webpack.config.dev.js",
+    "debug": "nodemon --inspect=9229 ./dist/server.bundle.js",
+    "start": "npm-run-all -p watch debug"
   },
   "devDependencies": {
     "@babel/core": "^7.12.10",
@@ -17,7 +19,9 @@
     "clean-webpack-plugin": "^3.0.0",
     "cross-env": "^7.0.3",
     "eslint": "^7.16.0",
+    "gravatar": "^1.8.1",
     "nodemon": "^2.0.6",
+    "npm-run-all": "^4.1.5",
     "terser-webpack-plugin": "^5.0.3",
     "webpack": "^5.11.0",
     "webpack-cli": "^4.2.0",

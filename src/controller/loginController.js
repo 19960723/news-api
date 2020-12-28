@@ -1,8 +1,9 @@
-// import gravatar from 'gravatar'
+import gravatar from 'gravatar'
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
 import moment from 'dayjs'
 import User from '../model/User'
+import SignRecord from '../model/SignRecord'
 import { JWT_SECRET } from '../config/index'
 import sendMail from '../db/MailConfig'
 import { checkCode } from '../utils'
@@ -33,13 +34,31 @@ export const Login = async(ctx, next) => {
       // mongoDB 查库
       if (checkUserPasswd) {
         // 验证通过 返回 Token数据
-        const token = jwt.sign({ _id: 'lxl' }, JWT_SECRET, {
+        const userObj = user.toJSON()
+        const arr = ['password', 'email', 'roles']
+        arr.map(item => {
+          delete userObj[item]
+        })
+        const token = jwt.sign({ _id: userObj._id, username: userObj.username }, JWT_SECRET, {
           expiresIn: '1d'
         })
+        // 加入isSign属性
+        const signRecord = await SignRecord.findByUid(userObj._id)
+        if (signRecord !== null) {
+          if (moment(signRecord.created).format('YYYY-MM-DD') === moment().format('YYYY-MM-DD')) {
+            userObj.isSign = true
+          } else {
+            userObj.isSign = false
+          }
+          userObj.lastSign = SignRecord.created
+        } else {
+          // 用户无签到记录
+          userObj.isSign = false
+        }
         ctx.body = {
           code: 200,
           token: token,
-          data: user
+          data: userObj
         }
       } else {
         // 用户名密码验证失败, 返回提示
@@ -64,7 +83,7 @@ export const Login = async(ctx, next) => {
 }
 
 /**
- *
+ * 注册
  * @param {*} sid 随机串 与图形验证码 关联
  * @param {*} code 图形验证码
  * @param {*} email  邮箱
@@ -74,7 +93,6 @@ export const Login = async(ctx, next) => {
 export const Register = async(ctx, next) => {
   // 接收客户端的数据
   const { body } = ctx.request
-  console.log(body)
   // 校验验证码的内容 (时效性、有效性)
   const sid = body.sid // uuid
   const code = body.code
@@ -99,11 +117,13 @@ export const Register = async(ctx, next) => {
     // 写入数据到数据库
     if (check) {
       body.password = await bcrypt.hash(body.password, 5)
+      const unsecureUrl = gravatar.url(body.email, { s: '100', r: 'x', d: 'retro' }, false)
       const user = new User({
         email: body.email,
         username: body.username,
         password: body.password,
-        created: moment().format('YYYY-MM-DD HH:mm:ss')
+        created: moment().format('YYYY-MM-DD HH:mm:ss'),
+        avatar: unsecureUrl
       })
       const result = await user.save()
       ctx.body = {
@@ -122,6 +142,42 @@ export const Register = async(ctx, next) => {
   }
 }
 
+/**
+ * 忘记密码
+ * @param {*} email
+ * @param {*} next
+ */
+export const Forget = async(ctx, next) => {
+  const { body } = ctx.request
+  const user = await User.findOne({ email: body.email })
+  if (!user) {
+    ctx.body = {
+      code: 404,
+      msg: '请检查邮箱'
+    }
+  }
+  try {
+    const result = await sendMail({
+      code: '1234',
+      expire: moment()
+        .add(30, 'minutes')
+        .format('YYYY-MM-DD HH:mm:ss'),
+      email: body.email,
+      user: 'lxl'
+    })
+    ctx.body = {
+      code: 200,
+      data: result,
+      msg: '邮箱发送成功'
+    }
+  } catch (e) {
+    console.log(e)
+  }
+}
+/**
+ * 邮箱注册
+ * @param {*} ctx
+ */
 export const SendMial = async(ctx) => {
   try {
     const result = await sendMail({
