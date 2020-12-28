@@ -48,6 +48,7 @@
     "mongoose": "^5.11.8",
     "nodemailer": "^6.4.17",
     "redis": "^3.0.2",
-    "svg-captcha": "^1.4.0"
+    "svg-captcha": "^1.4.0",
+    "uuid": "^3.3.3"
   }
 }

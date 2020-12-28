@@ -1,7 +1,12 @@
 import moment from 'dayjs'
+import jwt from 'jsonwebtoken'
+import uuid from 'uuid/v4'
 import SignRecord from '@/model/SignRecord'
 import User from '@/model/User'
 import { getJWTPlayload } from '@/utils'
+import { setValue } from '@/db/RedisDB'
+import { JWT_SECRET } from '@/config'
+import sendMail from '@/db/MailConfig'
 
 /**
  * 用户签到接口
@@ -100,28 +105,43 @@ export const userSign = async(ctx) => {
 
 // 更新用户基本信息接口
 
-// export const updateUserInfo = async(ctx) => {
-//   const { body } = ctx.request
-//   const obj = await getJWTPlayload(ctx.header.authorization)
-//   // 判断用户是否修改了邮箱
-//   const user = await User.findOne(({ _id: obj._id }))
-//   if (body.email && body.email !== user.email) {
-//     // 用户修改了邮箱
-//     // 发送reset邮箱
-//   } else {
-//     const arr = ['email', 'phone', 'password']
-//     arr.map(item => delete body[item])
-//     const result = await User.update({ _id: obj._id }, body)
-//     if (result.n === 1 && result.ok === 1) {
-//       ctx.body = {
-//         code: 200,
-//         'msg': '更新成功'
-//       }
-//     } else {
-//       ctx.body = {
-//         code: 500,
-//         msg: '更新失败'
-//       }
-//     }
-//   }
-// }
+export const updateUserInfo = async(ctx) => {
+  const { body } = ctx.request
+  const obj = await getJWTPlayload(ctx.header.authorization)
+  // 判断用户是否修改了邮箱
+  const user = await User.findOne(({ _id: obj._id }))
+  if (body.email && body.email !== user.email) {
+    // 用户修改了邮箱
+    // 发送reset邮箱
+    const key = uuid()
+    setValue(key, jwt.sign({ _id: obj._id }, JWT_SECRET, { expiresIn: '30m' }))
+    const result = await sendMail({
+      type: 'email',
+      key: key,
+      code: '',
+      expire: moment.add(30, 'minutes').format('YYYY-MM-DD HH:mm:ss'),
+      email: user.email,
+      user: user.username
+    })
+    ctx.body = {
+      code: 500,
+      data: result,
+      msg: '发送验证码邮箱成功, 请点击链接确认修改邮件账号!'
+    }
+  } else {
+    const arr = ['email', 'phone', 'password']
+    arr.map(item => delete body[item])
+    const result = await User.update({ _id: obj._id }, body)
+    if (result.n === 1 && result.ok === 1) {
+      ctx.body = {
+        code: 200,
+        'msg': '更新成功'
+      }
+    } else {
+      ctx.body = {
+        code: 500,
+        msg: '更新失败'
+      }
+    }
+  }
+}
