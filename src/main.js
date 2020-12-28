@@ -21,7 +21,16 @@ const middlewar = compose([
   statics(path.resolve(__dirname, '../public')), // 静态资源指向  public
   cors(),
   helmet(),
-  koaBody(),
+  koaBody({
+    multipart: true,
+    formidable: {
+      keepExtensions: true,
+      maxFieldsSize: 5 * 1024 * 1024
+    },
+    onError: err => {
+      console.log('koaBody TCL: err', err)
+    }
+  }),
   jsonUtil({ pretty: false, param: 'pretty' }),
   jwt,
   errorHandle

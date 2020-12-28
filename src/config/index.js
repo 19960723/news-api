@@ -1,3 +1,4 @@
+import path from 'path'
 export const JWT_SECRET = 'shared-secret' // jwt 鉴权 key
 export const mailKey = 'herhrjovjdwrebdf' // 邮箱服务授权码
 // mongodb 鉴权链接
@@ -16,3 +17,5 @@ export const REDIS_CONFIG = {
   port: 15003,
   password: '123456'
 }
+// 文件上传路径
+export const fileUploadPath = process.env.NODE_ENV === 'production' ? '/app/public' : path.join(path.resolve(__dirname), '../../public')
