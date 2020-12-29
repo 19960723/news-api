@@ -10,16 +10,16 @@ const PostSchema = new Schema({
   created: { type: Date }, // 创建日期
   catalog: { type: String }, // 帖子分类
   fav: { type: String }, // 帖子积分
-  isEnd: { type: String }, // 帖子状态(未结, 已结)
-  redis: { type: Number }, // 阅读计数
-  answer: { type: Number }, // 回答计数
-  status: { type: String }, // (0-打开回复, 1-关闭回复)
+  isEnd: { type: String, default: 0 }, // 帖子状态(未结, 已结)
+  redis: { type: Number, default: 0 }, // 阅读计数
+  answer: { type: Number, default: 0 }, // 回答计数
+  status: { type: String, default: 0 }, // (0-打开回复, 1-关闭回复)
   isTop: { type: String }, // 是否置顶
-  sort: { type: String }, // 置顶排序
+  sort: { type: String, default: 100 }, // 置顶排序
   tags: { // 文章的标签(精华、加精、etc)
     type: Array,
     default: [
-      { name: '', class: '' }
+      // { name: '', class: '' }
     ]
   }
 })

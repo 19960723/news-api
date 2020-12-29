@@ -1,6 +1,7 @@
 import moment from 'dayjs'
 import jwt from 'jsonwebtoken'
 import uuid from 'uuid/v4'
+import bcrypt from 'bcrypt'
 import SignRecord from '@/model/SignRecord'
 import User from '@/model/User'
 import { getJWTPlayload } from '@/utils'
@@ -103,7 +104,10 @@ export const userSign = async(ctx) => {
   }
 }
 
-// 更新用户基本信息接口
+/**
+ * 更新用户基本信息接口
+ * @param {*} ctx
+ */
 
 export const updateUserInfo = async(ctx) => {
   const { body } = ctx.request
@@ -142,6 +146,29 @@ export const updateUserInfo = async(ctx) => {
         code: 500,
         msg: '更新失败'
       }
+    }
+  }
+}
+
+/**
+ * 修改密码接口
+ * @param {*} ctx
+ */
+export const changePasswd = async(ctx) => {
+  const { body } = ctx.request
+  const obj = await getJWTPlayload(ctx.header.authorization)
+  const user = await User.findOne({ _id: obj._id })
+  if (await bcrypt.compare(body.oldpwd, user.password)) {
+    const newpassword = await bcrypt.hash(body.newpwd, 5)
+    await User.updateOne({ _id: obj._id }, { $set: { password: newpassword }})
+    ctx.body = {
+      code: 200,
+      msg: '更新密码成功'
+    }
+  } else {
+    ctx.body = {
+      code: 500,
+      msg: '更新密码错误, 请检查!'
     }
   }
 }
