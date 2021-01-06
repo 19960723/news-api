@@ -51,20 +51,23 @@ export const getPostList = async(ctx) => {
   const limit = body.limit ? parseInt(body.limit) : 20
   const options = {}
 
-  if (typeof body.catalog !== 'undefined' && body.catalog !== '') {
+  if (body.catalog && body.catalog > 0) {
     options.catalog = body.catalog
   }
-  if (typeof body.isTop !== 'undefined') {
+  if (body.title) {
+    options.title = { $regex: body.title }
+  }
+  if (body.isTop) {
     options.isTop = body.isTop
   }
-  if (typeof body.status !== 'undefined') {
-    options.status = body.status
+  if (body.isEnd) {
+    options.isEnd = body.isEnd
   }
-  if (typeof body.status !== 'undefined' && body.status !== '') {
+  if (body.status) {
     options.isEnd = body.status
   }
-  if (typeof body.tag !== 'undefined' && body.tag !== '') {
-    options.tags = { $elemMatch: { name: body.tag }}
+  if (typeof body.tags !== 'undefined' && body.tags !== '') {
+    options.tags = { $elemMatch: { name: body.tags }}
   }
   const result = await Post.getList(options, sort, page, limit)
   ctx.body = {
@@ -112,5 +115,24 @@ export const test = async(ctx) => {
   ctx.body = {
     code: 200,
     msg: 'hello'
+  }
+}
+/**
+ * 获取文章详情
+ * @param {*} ctx
+ */
+export const getPostDetail = async(ctx) => {
+  const params = ctx.query
+  if (!params.tid) {
+    ctx.body = {
+      code: 500,
+      msg: '文章标题为空'
+    }
+  }
+  const post = await Post.findByTid(params.tid)
+  ctx.body = {
+    code: 200,
+    data: post,
+    msg: '查询文章详情成功'
   }
 }

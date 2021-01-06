@@ -1,5 +1,5 @@
 import Router from 'koa-router'
-import { getCaptcha, getPostList, getLinks, getTips, getTopWeek, test } from '@/controller/publicController'
+import { getCaptcha, getPostList, getLinks, getTips, getTopWeek, getPostDetail, test } from '@/controller/publicController'
 
 const router = new Router()
 router.prefix('/public')
@@ -13,6 +13,8 @@ router.get('/links', getLinks)
 router.get('/tips', getTips)
 // 本周热议
 router.get('/topWeek', getTopWeek)
+//
+router.get('/content/detail', getPostDetail)
 // 测试
 router.get('/test', test)
 

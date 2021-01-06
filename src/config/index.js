@@ -18,4 +18,4 @@ export const REDIS_CONFIG = {
   password: '123456'
 }
 // 文件上传路径
-export const fileUploadPath = process.env.NODE_ENV === 'production' ? '/app/public' : path.join(path.resolve(__dirname), '../../public')
+export const fileUploadPath = process.env.NODE_ENV === 'production' ? '/app/public' : path.join(path.resolve(__dirname), '../public')
