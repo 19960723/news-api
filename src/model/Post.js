@@ -60,6 +60,22 @@ PostSchema.statics = {
       path: 'uid',
       select: 'username avatar isVip _id'
     })
+  },
+  getListByUid: function(id, page, limit) {
+    return this.find({ uid: id })
+      .skip(page * limit)
+      .limit(limit)
+      .sort({ created: -1 })
+  },
+  countByUid: function() {
+
+  },
+  // 删除帖子 先删除该帖子相关的评论、收藏、浏览历史
+  deleteManyAndRef: async function(conditions) {
+    const postList = await this.find(conditions)
+    console.assert(postList.length > 0, '未找到要删除的 post 文档!')
+    // for (let i = 0; i < postList.length; i++) {
+    // }
   }
 }
 

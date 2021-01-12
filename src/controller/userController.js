@@ -19,7 +19,6 @@ export const userSign = async(ctx) => {
   // 查询用户上一次签到记录
   const record = await SignRecord.findByUid(obj._id)
   const user = await User.findById(obj._id)
-
   let newRecord = {} // SignRecord 对象
   let result = ''
   // 判断签到逻辑
@@ -73,7 +72,7 @@ export const userSign = async(ctx) => {
       }
       // 更新签到数据
       newRecord = new SignRecord({
-        uid: obj._uid,
+        uid: obj._id,
         favs: fav
       })
       await newRecord.save()
@@ -135,6 +134,7 @@ export const updateUserInfo = async(ctx) => {
   } else {
     const arr = ['email', 'phone', 'password']
     arr.map(item => delete body[item])
+    console.log(body)
     const result = await User.update({ _id: obj._id }, body)
     if (result.n === 1 && result.ok === 1) {
       ctx.body = {
@@ -168,7 +168,37 @@ export const changePasswd = async(ctx) => {
   } else {
     ctx.body = {
       code: 500,
-      msg: '更新密码错误, 请检查!'
+      msg: '更新前后密码错误, 请检查!'
     }
+  }
+}
+/**
+ * 获取用户基本信息
+ * @param {*} ctx
+ */
+export const getUserInfo = async(ctx) => {
+  const params = ctx.query
+  const uid = params.uid || ctx._id
+  let user = await User.findById(uid)
+  // 获得用户的签到记录 有没有 > tbody 0:00:00
+  if (user) {
+    user = user.toJSON()
+    const date = moment().format('YYYY-MM-DD')
+    const result = await SignRecord.findOne({
+      uid: uid,
+      created: {
+        $gte: date + ' 00:00:00'
+      }
+    })
+    if (result && result.uid) {
+      user.isSign = true
+    } else {
+      user.isSign = false
+    }
+  }
+  ctx.body = {
+    code: 200,
+    data: user,
+    msg: '查询成功'
   }
 }

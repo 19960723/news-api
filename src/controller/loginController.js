@@ -36,14 +36,15 @@ export const Login = async(ctx, next) => {
       if (checkUserPasswd) {
         // 验证通过 返回 Token数据
         const userObj = user.toJSON()
-        const arr = ['password', 'email', 'roles']
+        const arr = ['password', 'email']
         arr.map(item => {
-          delete userObj[item]
+          return delete userObj[item]
         })
         const token = jwt.sign({ _id: userObj._id, username: userObj.username }, JWT_SECRET, {
           expiresIn: '1d'
         })
         // 加入isSign属性
+        console.log(userObj._id)
         const signRecord = await SignRecord.findByUid(userObj._id)
         if (signRecord !== null) {
           if (moment(signRecord.created).format('YYYY-MM-DD') === moment().format('YYYY-MM-DD')) {
@@ -51,7 +52,7 @@ export const Login = async(ctx, next) => {
           } else {
             userObj.isSign = false
           }
-          userObj.lastSign = SignRecord.created
+          userObj.lastSign = signRecord.created
         } else {
           // 用户无签到记录
           userObj.isSign = false

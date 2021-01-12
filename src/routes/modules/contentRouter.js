@@ -1,5 +1,5 @@
 import Router from 'koa-router'
-import { uploadImg, addPost } from '@/controller/contentController'
+import { uploadImg, addPost, updatePost } from '@/controller/contentController'
 
 const router = new Router()
 router.prefix('/content')
@@ -7,4 +7,6 @@ router.prefix('/content')
 router.post('/upload', uploadImg)
 // 发表新帖
 router.post('/add', addPost)
+// 更新帖子
+router.post('/update', updatePost)
 export default router
