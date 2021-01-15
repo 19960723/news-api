@@ -1,5 +1,7 @@
 import Router from 'koa-router'
-import { getCaptcha, getPostList, getLinks, getTips, getTopWeek, getPostDetail, test } from '@/controller/publicController'
+import { getCaptcha, getPostList, getLinks, getTips, getTopWeek, getPostDetail } from '@/controller/publicController'
+import { getComments } from '@/controller/commentsController'
+import { resetEmail } from '@/controller/userController'
 
 const router = new Router()
 router.prefix('/public')
@@ -13,9 +15,11 @@ router.get('/links', getLinks)
 router.get('/tips', getTips)
 // 本周热议
 router.get('/topWeek', getTopWeek)
-//
+// 详情页
 router.get('/content/detail', getPostDetail)
-// 测试
-router.get('/test', test)
+// 获取评论列表
+router.get('/comments', getComments)
+// 确认修改邮箱
+router.get('/resetEmail', resetEmail)
 
 export default router

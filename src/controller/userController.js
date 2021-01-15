@@ -3,9 +3,10 @@ import jwt from 'jsonwebtoken'
 import uuid from 'uuid/v4'
 import bcrypt from 'bcrypt'
 import SignRecord from '@/model/SignRecord'
+import UserCollect from '@/model/UserCollect'
 import User from '@/model/User'
 import { getJWTPlayload } from '@/utils'
-import { setValue } from '@/db/RedisDB'
+import { setValue, getValue } from '@/db/RedisDB'
 import { JWT_SECRET } from '@/config'
 import sendMail from '@/db/MailConfig'
 
@@ -113,39 +114,64 @@ export const updateUserInfo = async(ctx) => {
   const obj = await getJWTPlayload(ctx.header.authorization)
   // 判断用户是否修改了邮箱
   const user = await User.findOne(({ _id: obj._id }))
+  let msg = ''
   if (body.email && body.email !== user.email) {
     // 用户修改了邮箱
     // 发送reset邮箱
+
+    // 判断用户的新邮箱是否已经有人注册
+    const tmpUser = await User.findOne({ email: body.email })
+    if (tmpUser && tmpUser.password) {
+      ctx.body = {
+        code: 501,
+        msg: '邮箱已经注册'
+      }
+      return
+    }
     const key = uuid()
     setValue(key, jwt.sign({ _id: obj._id }, JWT_SECRET, { expiresIn: '30m' }))
-    const result = await sendMail({
+    await sendMail({
       type: 'email',
-      key: key,
+      data: {
+        key: key,
+        email: body.email
+      },
       code: '',
-      expire: moment.add(30, 'minutes').format('YYYY-MM-DD HH:mm:ss'),
+      expire: moment().add(30, 'minutes').format('YYYY-MM-DD HH:mm:ss'),
       email: user.email,
       user: user.username
     })
+    msg = '更新基本资料成功, 账号修改需要邮箱确认, 请查收邮箱!'
+  }
+
+  const arr = ['email', 'phone', 'password']
+  arr.map(item => delete body[item])
+  const result = await User.updateOne({ _id: obj._id }, body)
+  if (result.n === 1 && result.ok === 1) {
     ctx.body = {
-      code: 500,
-      data: result,
-      msg: '发送验证码邮箱成功, 请点击链接确认修改邮件账号!'
+      code: 200,
+      msg: msg === '' ? '更新成功' : msg
     }
   } else {
-    const arr = ['email', 'phone', 'password']
-    arr.map(item => delete body[item])
-    console.log(body)
-    const result = await User.update({ _id: obj._id }, body)
-    if (result.n === 1 && result.ok === 1) {
-      ctx.body = {
-        code: 200,
-        'msg': '更新成功'
-      }
-    } else {
-      ctx.body = {
-        code: 500,
-        msg: '更新失败'
-      }
+    ctx.body = {
+      code: 500,
+      msg: '更新失败'
+    }
+  }
+}
+/**
+ * 确认修改邮箱
+ * @param {*} ctx
+ */
+export const resetEmail = async(ctx) => {
+  const body = ctx.query
+  if (body.key) {
+    const token = await getValue(body.key)
+    const obj = getJWTPlayload('Bearer ' + token)
+    await User.updateOne({ _id: obj._id }, { email: body.email })
+    ctx.body = {
+      code: 200,
+      msg: '更新邮箱成功'
     }
   }
 }
@@ -200,5 +226,55 @@ export const getUserInfo = async(ctx) => {
     code: 200,
     data: user,
     msg: '查询成功'
+  }
+}
+/**
+ * 设置收藏
+ */
+export const setCollect = async(ctx) => {
+  const params = ctx.query
+  const obj = await getJWTPlayload(ctx.header.authorization)
+  if (parseInt(params.isFav)) {
+    // 说明用户已经收藏帖子
+    await UserCollect.deleteOne({ uid: obj._id, tid: params.tid })
+    ctx.body = {
+      code: 200,
+      msg: '取消收藏成功'
+    }
+  } else {
+    const newCollect = new UserCollect({
+      uid: obj._id,
+      tid: params.tid,
+      title: params.title
+    })
+    console.log(params.title)
+    const result = await newCollect.save()
+    if (result.uid) {
+      ctx.body = {
+        code: 200,
+        data: result,
+        msg: '收藏成功'
+      }
+    }
+  }
+}
+// 获取收藏列表
+export const getCollectByUid = async(ctx) => {
+  const params = ctx.query
+  const obj = await getJWTPlayload(ctx.header.authorization)
+  const result = await UserCollect.getListByUid(obj._id, params.page, params.limit ? parseInt(params.limit) : 10)
+  const total = await UserCollect.countByUid(obj._id)
+  if (result.length > 0) {
+    ctx.body = {
+      code: 200,
+      data: result,
+      total,
+      msg: '查询列表成功'
+    }
+  } else {
+    ctx.body = {
+      code: 500,
+      msg: '查询列表失败 '
+    }
   }
 }

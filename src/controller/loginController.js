@@ -2,12 +2,13 @@ import gravatar from 'gravatar'
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
 import moment from 'dayjs'
+import uuid from 'uuid/v4'
 import User from '../model/User'
 import SignRecord from '../model/SignRecord'
 import { JWT_SECRET } from '../config/index'
 import sendMail from '../db/MailConfig'
 import { checkCode, getJWTPlayload } from '../utils'
-import { getValue } from '../db/RedisDB'
+import { getValue, setValue } from '../db/RedisDB'
 
 /**
  *
@@ -157,41 +158,27 @@ export const Forget = async(ctx, next) => {
       code: 404,
       msg: '请检查邮箱'
     }
+    return
   }
   try {
+    const key = uuid()
+    setValue(key, jwt.sign({ _id: user._id }, JWT_SECRET, { expiresIn: '30m' }), 30 * 60)
     const result = await sendMail({
-      code: '1234',
+      type: 'reset',
+      data: {
+        key: key,
+        email: body.email
+      },
       expire: moment()
         .add(30, 'minutes')
         .format('YYYY-MM-DD HH:mm:ss'),
       email: body.email,
-      user: 'lxl'
+      user: user.name ? user.name : body.email
     })
     ctx.body = {
       code: 200,
       data: result,
       msg: '邮箱发送成功'
-    }
-  } catch (e) {
-    console.log(e)
-  }
-}
-/**
- * 邮箱注册
- * @param {*} ctx
- */
-export const SendMial = async(ctx) => {
-  try {
-    const result = await sendMail({
-      code: '1234',
-      expire: moment().add(30, 'minutes').format('YYYY-MM-DD HH:mm:ss'),
-      email: '13290731298@163.com',
-      user: 'lxl'
-    })
-    ctx.body = {
-      code: 200,
-      data: result,
-      msg: '邮件发送成功'
     }
   } catch (e) {
     console.log(e)
@@ -222,11 +209,11 @@ export const Reset = async(ctx) => {
   }
   const token = await getValue(body.key)
   if (token) {
-    const obj = getJWTPlayload(token)
+    const obj = getJWTPlayload('Bearer ' + token)
     body.password = await bcrypt.hash(body.password, 5)
     await User.updateOne({ _id: obj._id }, { password: body.password })
     ctx.body = {
-      code: 500,
+      code: 200,
       msg: '更新用户密码成功'
     }
   } else {

@@ -11,7 +11,7 @@ const PostSchema = new Schema({
   catalog: { type: String }, // 帖子分类
   fav: { type: String }, // 帖子积分
   isEnd: { type: String, default: '0' }, // 帖子状态(未结, 已结)
-  redis: { type: Number, default: 0 }, // 阅读计数
+  reads: { type: Number, default: 0 }, // 阅读计数
   answer: { type: Number, default: 0 }, // 回答计数
   status: { type: String, default: '0' }, // (0-打开回复, 1-关闭回复)
   isTop: { type: String, default: '0' }, // 是否置顶
@@ -32,7 +32,6 @@ PostSchema.pre('save', function(next) {
   this.created = moment().format('YYYY-MM-DD HH:mm:ss')
   next()
 })
-
 PostSchema.statics = {
   getList: function(options, sort, page, limit) {
     return this.find(options)

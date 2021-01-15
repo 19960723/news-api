@@ -10,6 +10,7 @@ export const DB_URL = () => {
   const db_name = 'imooc'
   return `mongodb://${username}:${password}@${hostname}:${port}/${db_name}`
 }
+export const baseUrl = process.env.NODE_ENV === 'production' ? 'http://lxlgw.top' : 'http://localhost:8080'
 
 // redis
 export const REDIS_CONFIG = {

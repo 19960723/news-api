@@ -1,5 +1,5 @@
 import Router from 'koa-router'
-import { userSign, updateUserInfo, changePasswd, getUserInfo } from '@/controller/userController'
+import { userSign, updateUserInfo, changePasswd, getUserInfo, setCollect, getCollectByUid } from '@/controller/userController'
 import { getPostByUid, deletePostByUid } from '@/controller/contentController'
 
 const router = new Router()
@@ -16,5 +16,9 @@ router.post('/basic', updateUserInfo)
 router.get('/mypost', getPostByUid)
 // 删除发帖纪录
 router.get('/deletePost', deletePostByUid)
+// 取消 设置收藏
+router.get('/setCollect', setCollect)
+// 获取收藏列表
+router.get('/collect', getCollectByUid)
 
 export default router

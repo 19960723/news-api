@@ -49,7 +49,7 @@ export const uploadImg = async(ctx) => {
   const destPath = `${dir}/${avatarName}.${ext}`
   const reader = fs.createReadStream(file.path)
   const upStream = fs.createWriteStream(destPath)
-  const filePath = `http://192.168.1.114:3800/${moment().format('YYYYMMDD')}/${avatarName}.${ext}`
+  const filePath = `/${moment().format('YYYYMMDD')}/${avatarName}.${ext}`
   reader.pipe(upStream)
   ctx.body = {
     code: 200,

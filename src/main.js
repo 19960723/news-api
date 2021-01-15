@@ -15,7 +15,7 @@ import errorHandle from './common/ErrorHandle'
 const app = new Koa()
 const isDevMode = !(process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'prod')
 // 定义公共路径，不需要jwt鉴权
-const jwt = JWT({ secret: JWT_SECRET }).unless({ path: [/^\/public/, /^\/user/] }) // 正则排除 /public /login  接口拦截
+const jwt = JWT({ secret: JWT_SECRET }).unless({ path: [/^\/public/, /^\/login/] }) // 正则排除 /public /login  接口拦截
 
 const middlewar = compose([
   statics(path.resolve(__dirname, '../public')), // 静态资源指向  public

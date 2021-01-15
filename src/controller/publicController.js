@@ -1,7 +1,9 @@
 import svgCaptcha from 'svg-captcha'
 import Post from '@/model/Post'
 import Links from '@/model/Links'
+import UserCollect from '@/model/UserCollect'
 import { setValue } from '@/db/RedisDB'
+import { getJWTPlayload } from '../utils'
 
 // 获取图片验证码
 export const getCaptcha = (ctx) => {
@@ -107,16 +109,6 @@ export const getTopWeek = async(ctx) => {
     data: result
   }
 }
-
-// 测试
-export const test = async(ctx) => {
-  const keys = { title: '不可一世', name: 'lxl', age: '23', link: 'http://www.baidu.com', src: 'https://i.pinimg.com/236x/54/87/a6/5487a6ceb6ac2c092fbf82ab435ee90c.jpg' }
-  setValue('key2', keys)
-  ctx.body = {
-    code: 200,
-    msg: 'hello'
-  }
-}
 /**
  * 获取文章详情
  * @param {*} ctx
@@ -126,13 +118,45 @@ export const getPostDetail = async(ctx) => {
   if (!params.tid) {
     ctx.body = {
       code: 500,
-      msg: '文章标题为空'
+      msg: '文章id为空'
     }
   }
   const post = await Post.findByTid(params.tid)
-  ctx.body = {
-    code: 200,
-    data: post,
-    msg: '查询文章详情成功'
+  if (!post) {
+    ctx.body = {
+      code: 200,
+      data: {},
+      msg: '查询文章详情成功'
+    }
+    return
+  }
+  let isFav = 0
+  // 判断用户是否传递Authorization的数据, 即是否登录
+  if (typeof ctx.header.authorization !== 'undefined' && ctx.header.authorization !== '') {
+    const obj = await getJWTPlayload(ctx.header.authorization)
+    const userCollect = await UserCollect.findOne({
+      uid: obj._id,
+      tid: params.tid
+    })
+    if (userCollect && userCollect.tid) {
+      isFav = 1
+    }
+  }
+  const newPost = post.toJSON()
+  newPost.isFav = isFav
+
+  // 更新文章阅读记录
+  const result = await Post.updateOne({ _id: params.tid }, { $inc: { reads: 1 }})
+  if (post._id && result.ok === 1) {
+    ctx.body = {
+      code: 200,
+      data: newPost,
+      msg: '查询文章详情成功'
+    }
+  } else {
+    ctx.body = {
+      code: 500,
+      msg: '获取文章详情失败'
+    }
   }
 }

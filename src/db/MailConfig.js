@@ -1,7 +1,13 @@
 'use strict'
 import nodemailer from 'nodemailer'
-import { mailKey } from '../config'
-const url = 'http://123.56.45.69'
+import qs from 'qs'
+import { mailKey, baseUrl } from '@/config'
+
+// const sendSms = (option, sendInfo) => {
+//   option.subject = '你好, 你的验证码'
+//   option.text = `您正在绑定您的邮箱, 验证码为: ${sendInfo}, 验证码过期时间: ${sendInfo.expire}.`
+//   option.html = ''
+// }
 
 async function sendMail(sendInfo) {
   const transporter = nodemailer.createTransport({
@@ -14,6 +20,9 @@ async function sendMail(sendInfo) {
     }
   })
 
+  const route = sendInfo.type === 'email' ? '/confirm' : '/reset'
+  const url = `${baseUrl}/#${route}?` + qs.stringify(sendInfo.data)
+
   const info = await transporter.sendMail({
     from: '"认证邮箱 👻" <1847426505@qq.com>', // 发件人 邮箱  '昵称<发件人邮箱>'
     to: sendInfo.email, // 收件人的邮箱 可以是其它运营商的邮箱
@@ -22,18 +31,18 @@ async function sendMail(sendInfo) {
         ? `你好开发者,${sendInfo.user}！${sendInfo.type === 'reset' ? '重置密码链接!' : '注册码！'}`
         : '确认修改邮箱链接',
     text: // 内容
-      `您在ss中注册，您的邀请码是${
+      `您在平台中注册，您的邀请码是${
         sendInfo.code
       },邀请码的过期时间: ${sendInfo.expire}
       `,
     html: // 这里可以添加 html 标签内容
       `<div style="border: 1px solid #dcdcdc;color: #676767;width: 600px; margin: 0 auto; padding-bottom: 50px;position: relative;">
-          <div style="height: 60px; background: #393d49; line-height: 60px; color: #58a36f; font-size: 18px;padding-left: 10px;">Imooc社区——欢迎来到官方社区</div>
+          <div style="height: 60px; background: #393d49; line-height: 60px; color: #58a36f; font-size: 18px;padding-left: 10px;">LXL社区——欢迎来到官方社区</div>
           <div style="padding: 25px">
             <div>您好，${sendInfo.user}同学，重置链接有效时间30分钟，请在${
   sendInfo.expire
-}之前${sendInfo.code ? '重置您的密码' : '修改你的邮箱为:' + sendInfo.data.username}：</div>
-            <a href="${url}" style="padding: 10px 20px; color: #fff; background: #009e94; display: inline-block;margin: 15px 0;">${sendInfo.code}</a>
+}之前${sendInfo.code ? '重置您的密码' : '修改你的邮箱为: ' + sendInfo.data.email}：</div>
+            <a href="${url}" style="padding: 10px 20px; color: #fff; background: #009e94; display: inline-block;margin: 15px 0;">${sendInfo.code ? '立即重置密码' : '确认设置邮箱'}</a>
             <div style="padding: 5px; background: #f2f2f2;">如果该邮件不是由你本人操作，请勿进行激活！否则你的邮箱将会被他人绑定。</div>
           </div>
           <div style="background: #fafafa; color: #b4b4b4;text-align: center; line-height: 45px; height: 45px; position: absolute; left: 0; bottom: 0;width: 100%;">系统邮件，请勿直接回复</div>
